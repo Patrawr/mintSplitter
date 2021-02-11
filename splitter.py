@@ -77,14 +77,43 @@ def locate_and_split_txn(driver, transaction_id, total_amount):
     split_submit_button = driver.find_element_by_id("pop-split-submit")
     split_submit_button.click()
 
+def submit_split_form(mint, txn_id):
+    url = 'https://mint.intuit.com/updateTransaction.xevent'
+    data = {'task': 'split',
+            'data': '', 
+            'txnId': f"{txn_id}:0", 
+            'token': mint.token,
+            'amount0': 79.39,
+            'category0': 'Groceries',
+            'merchant0': 'Farm Boy',
+            'txnId0': 0,
+            'percentAmount0': 79.39,
+            'categoryId0': 701,
+            'amount1': 100,
+            'category1': 'Hide from Budgets & Trends',
+            'merchant1': 'Farm Boy',
+            'txnId1': 0,
+            'percentAmount1': 100,
+            'categoryId1': 40
+            }
+
+    headers = {'accept': '*/*',
+               'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+               'origin': 'https://mint.intuit.com',
+               'referer': 'https://mint.intuit.com/transaction.event',
+               'dnt': '1'
+               }
+
+    result = mint.post(url, data=data)
+
+    print(result.text)
+
 # start of script #############################################################################################
-print ('hello')
+print ('Starting splitter')
 username = keyring.get_password("mint_splitter", "user")
 pw = keyring.get_password("mint_splitter", "password")
 
-test_string_amount = "$14.50"
-cast_float_amount = float(test_string_amount.replace('$', ''))
-
+print("Logging in...")
 mint = mintapi.Mint(
     username,
     pw,
@@ -95,21 +124,26 @@ mint = mintapi.Mint(
     wait_for_sync=False
 )
 
+print("Logged in!")
 
 accounts = mint.get_accounts(True)
+print("Retrieved accounts")
+
 joint_card = accounts[34]
 
 #navigate to transaction page for specific account
 try: 
     mint.driver.get(f"https://mint.intuit.com/transaction.event?accountId={joint_card['id']}")
+    print(f"Navigating to account {joint_card['accountName']}")
 except:
-    print('Cannot find transactions for account: $$$$')
+    print(f"Cannot find transactions for {joint_card['accountName']}")
 
 
 # isChild field determines if it's joint or not, date is mm/dd/yy format
 txns = mint.get_transactions_json(id=joint_card["id"], start_date="01/01/21")
+print(f"Retrieved {len(txns)} txns for {joint_card['accountName']}")
 
-time.sleep(5)
+submit_split_form(mint, "1376006654")
 
 joint_txns=[]
 
@@ -121,5 +155,5 @@ for txn in txns:
         
 # convert amount from string in $9.99 format to float
 # locate_and_split_txn(mint.driver, str(joint_txns[0]["id"]), float(joint_txns[0]["amount"].replace('$', '')))
-locate_and_split_txn(mint.driver, "1368494644", 25.82)
-locate_and_split_txn(mint.driver, "1369145342", 45.61)
+# locate_and_split_txn(mint.driver, "1368494644", 25.82)
+# locate_and_split_txn(mint.driver, "1369145342", 45.61)
