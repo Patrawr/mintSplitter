@@ -1,13 +1,16 @@
 import mintapi
 import keyring
 import time
+
 from datetime import date, datetime
 
 from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
+from PyInquirer import prompt, print_json
+
+MINT_URL = 'https://mint.intuit.com'
+UPDATE_TXN_PATH = '/updateTransaction.xevent'
+HIDE_CATEGORY = 40
+
 
 # takes in a monetary amount, strips off the $ and splits into two equal floats,
 # with 2 decimal precision
@@ -21,7 +24,7 @@ def calculate_split(total_amount):
 
 
 def submit_split_form(mint, txn):
-    url = 'https://mint.intuit.com/updateTransaction.xevent'
+    url = f"{MINT_URL}{UPDATE_TXN_PATH}"
 
     split_amounts = calculate_split(txn['amount'])
 
@@ -41,52 +44,95 @@ def submit_split_form(mint, txn):
             'txnId1': 0,
             'percentAmount1': split_amounts[1],
             # category for hide from budgets and trends
-            'categoryId1': 40
+            'categoryId1': HIDE_CATEGORY
             }
 
     result = mint.post(url, data=data)
 
     print(f"Split {txn['merchant']} for {txn['amount']} on {txn['date']}")
 
+
+def filter_answers(answer): 
+    split_answers = answer.split('|')
+    return split_answers[1].strip()
+
 # start of script #############################################################################################
 print ('Starting splitter')
-username = keyring.get_password("mint_splitter", "user")
-pw = keyring.get_password("mint_splitter", "password")
 
 print("Logging in...")
-mint = mintapi.Mint(
-    username,
-    pw,
-    mfa_method='sms',
-    headless=False,
-    mfa_input_callback=None,
-    session_path="./session",
-    wait_for_sync=False
-)
+try: 
+    mint = mintapi.Mint(
+        email=keyring.get_password("mint_splitter", "user"),
+        password=keyring.get_password("mint_splitter", "password"),
+        mfa_method='sms',
+        headless=False,
+        mfa_input_callback=None,
+        session_path="./session",
+        wait_for_sync=False
+    )
+except:
+    print("Failed to login to mint/open new chrome session. Ensure your current chrome session is closed")
 
 print("Logged in!")
+
 
 accounts = mint.get_accounts(True)
 print("Retrieved accounts")
 
-joint_card = accounts[34]
-
-#navigate to transaction page for specific account
-try: 
-    mint.driver.get(f"https://mint.intuit.com/transaction.event?accountId={joint_card['id']}")
-    print(f"Navigating to account {joint_card['accountName']}")
-except:
-    print(f"Cannot find transactions for {joint_card['accountName']}")
+# filters out inactive accounts, and unrelated accounts
+accounts[:] = [
+     account for account in accounts
+     if account['isActive'] == True and account['accountType'] in ('credit', 'bank')
+        ]
 
 
-# isChild field determines if it's joint or not, date is mm/dd/yy format
-txns = mint.get_transactions_json(id=joint_card["id"], start_date="12/24/20")
-print(f"Retrieved {len(txns)} txns for {joint_card['accountName']}")
+filteredAccountChoices = []
+
+# generates account selection question
+for filteredAccount in accounts:
+    filteredAccountChoices.append({'name': f"{filteredAccount['fiName']}  {filteredAccount['accountName']} | {filteredAccount['yodleeAccountNumberLast4']} | ${filteredAccount['currentBalance']}"})
 
 
-joint_txns=[]
+filtered_account_questions = [
+    {
+        'type': 'checkbox',
+        'name': 'accounts',
+        'message': "Select accounts to split?",
+        'qmark': '💸',
+        'choices': filteredAccountChoices
+    }
+]
 
-for txn in txns:
-    if  not txn["isChild"] and txn["category"] != "Hide from Budgets & Trends" and txn["isDebit"] and not txn["isPending"]:
-        joint_txns.append(txn)
-        submit_split_form(mint, txn)
+selected_accounts = prompt(filtered_account_questions)
+selected_accounts_obj = []
+
+for answer in selected_accounts["accounts"]:
+    for account in accounts:
+        if account['yodleeAccountNumberLast4'] == filter_answers(answer):
+            selected_accounts_obj.append(account)
+
+
+for account in selected_accounts_obj:
+
+    #navigate to transaction page for specific account
+    try: 
+        mint.driver.get(f"https://mint.intuit.com/transaction.event?accountId={account['id']}")
+        print(f"Navigating to account {account['accountName']}")
+    except:
+        print(f"Cannot find transactions for {account['accountName']}")
+
+
+    # isChild field determines if it's joint or not, date is mm/dd/yy format
+    txns = mint.get_transactions_json(id=account["id"], start_date="12/05/20")
+
+
+    joint_txns=[]
+
+    for txn in txns:
+        if  not txn["isChild"] and txn["category"] not in ("Hide from Budgets & Trends", "Transfer") and \
+        txn["isDebit"] and not txn["isPending"]:
+            joint_txns.append(txn)
+            submit_split_form(mint, txn)
+
+    print(f"Retrieved {len(joint_txns)} txns for {account['accountName']}")
+

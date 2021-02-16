@@ -3,3 +3,12 @@ chromedriver
 accts.json
 .vscode/launch.json
 .vscode/settings.json
+split_response.xml
+.idea/.gitignore
+.idea/mintSplitter.iml
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
+.idea/inspectionProfiles/profiles_settings.xml
+requestHeaders.json
+txns.json
