@@ -1,6 +1,8 @@
 import splitter as mint_splitter
 import mintapi
 import keyring
+import cli_handler as cli
+
 
 def main():
     print ('Starting splitter')
@@ -12,7 +14,6 @@ def main():
             password=keyring.get_password("mint_splitter", "password"),
             mfa_method='sms',
             headless=True,
-            mfa_input_callback=None,
             session_path="./session",
             wait_for_sync=False
         )
@@ -25,8 +26,12 @@ def main():
 
     splitter = mint_splitter.Splitter(mint)
     accounts = splitter.get_filtered_accounts()
-    selected_accounts = splitter.get_accounts_from_user_selection(accounts)
-    splitter.split_transactions (selected_accounts)
+
+    selected_accounts = cli.get_accounts_from_user_selection(accounts)
+
+    splitter.split_transactions (selected_accounts, start_date='12/05/20')
+
+    mint.close()
 
 if __name__ == '__main__':
         main()

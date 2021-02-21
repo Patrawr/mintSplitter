@@ -1,7 +1,6 @@
 import time
 
 from datetime import date, datetime
-from PyInquirer import prompt, print_json
 
 class Splitter: 
     """Class that has the ability to split mint transactions in two
@@ -60,11 +59,6 @@ class Splitter:
 
         print(f"Split {txn['merchant']} for {txn['amount']} on {txn['date']}")
 
-
-    def filter_answers(self, answer): 
-        split_answers = answer.split('|')
-        return split_answers[1].strip()
-
     def get_filtered_accounts(self):
         accounts = self.mint.get_accounts(True)
         print("Retrieved accounts")
@@ -77,38 +71,8 @@ class Splitter:
 
         return accounts
 
-    # presents retrieved mint accounts to user in CLI and returns list of mint account objects corresponding to selection
-    def get_accounts_from_user_selection(self, accounts):
-        filteredAccountChoices = []
 
-        # generates account selection question
-        for filteredAccount in accounts:
-            filteredAccountChoices.append({'name': f"{filteredAccount['fiName']}  {filteredAccount['accountName']} | {filteredAccount['yodleeAccountNumberLast4']} | ${filteredAccount['currentBalance']}"})
-
-
-        filtered_account_questions = [
-            {
-                'type': 'checkbox',
-                'name': 'accounts',
-                'message': "Select accounts to split.",
-                'qmark': '💸',
-                'choices': filteredAccountChoices
-            }
-        ]
-
-        # prompts the user to select from retrieved accounts
-        selected_accounts = prompt(filtered_account_questions)
-        selected_accounts_obj = []
-
-        # get the mint accounts object for each selected account
-        for answer in selected_accounts["accounts"]:
-            for account in accounts:
-                if account['yodleeAccountNumberLast4'] == self.filter_answers(answer):
-                    selected_accounts_obj.append(account)
-
-        return selected_accounts_obj
-
-    def split_transactions(self, selected_accounts):
+    def split_transactions(self, selected_accounts, start_date):
         for account in selected_accounts:
 
             #navigate to transaction page for specific account
@@ -120,8 +84,7 @@ class Splitter:
 
 
             # isChild field determines if it's joint or not, date is mm/dd/yy format
-            txns = self.mint.get_transactions_json(id=account["id"], start_date="12/05/20")
-
+            txns = self.mint.get_transactions_json(id=account["id"], start_date=start_date)
 
             joint_txns=[]
 
