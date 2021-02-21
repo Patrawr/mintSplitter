@@ -1,13 +1,19 @@
-import mintapi
-import keyring
 import time
 
 from datetime import date, datetime
-
-from selenium import webdriver
 from PyInquirer import prompt, print_json
 
 class Splitter: 
+    """Class that has the ability to split mint transactions in two
+       
+       For all accounts passed into the split_transactions method
+       eligible transactions will be split into two transactions, 
+       changing one of their categories to "Hide from Budgets and Trends". 
+
+       The percentage of the split is set to 50% by default but can be changed
+       on a per account basis.
+    """
+
     MINT_URL = 'https://mint.intuit.com'
     UPDATE_TXN_PATH = '/updateTransaction.xevent'
     HIDE_CATEGORY = 40
@@ -126,33 +132,4 @@ class Splitter:
                     self.submit_split_form(txn)
 
             print(f"Split {len(joint_txns)} txns for {account['accountName']}")
-
-# start of script #############################################################################################
-print ('Starting splitter')
-
-print("Logging in...")
-try: 
-    mint = mintapi.Mint(
-        email=keyring.get_password("mint_splitter", "user"),
-        password=keyring.get_password("mint_splitter", "password"),
-        mfa_method='sms',
-        headless=True,
-        mfa_input_callback=None,
-        session_path="./session",
-        wait_for_sync=False
-    )
-except:
-    print("Failed to login to mint/open new chrome session. Ensure your current chrome session is closed")
-    mint.close()
-    exit()
-
-print("Logged in!")
-
-splitter = Splitter(mint)
-
-accounts = splitter.get_filtered_accounts()
-
-selected_accounts = splitter.get_accounts_from_user_selection(accounts)
-
-splitter.split_transactions (selected_accounts)
 
