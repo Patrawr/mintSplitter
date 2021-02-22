@@ -1,4 +1,34 @@
 from PyInquirer import prompt, print_json
+import json
+
+SETTINGS_TEMPLATE = {'selectedAccounts': []}
+
+def open_settings_file():
+    # 1 check if file exists, if so open
+    # 2 check if is empty or not, if not write template out
+    settings = {}
+
+    with open("settings.json", "a+") as settings_file:
+        try:
+            settings_file.seek(0)
+            settings = json.load(settings_file)
+        except ValueError:
+            # write to json file if empty or corrupted
+            settings_file.truncate(0)
+            json.dump(SETTINGS_TEMPLATE, settings_file)
+            settings_file.seek(0)
+            settings = json.load(settings_file)
+        except IOError:
+            print("OS Level Error, ensure settings file is not in use somewhere else")
+
+    return settings
+
+def check_settings():
+
+    settings = open_settings_file()
+
+    print(settings)
+    print()
 
 def filter_answers(answer): 
     split_answers = answer.split('|')
@@ -6,6 +36,8 @@ def filter_answers(answer):
 
 # presents retrieved mint accounts to user in CLI and returns list of mint account objects corresponding to selection
 def get_accounts_from_user_selection(accounts):
+    check_settings()
+
     filteredAccountChoices = []
 
     # generates account selection question

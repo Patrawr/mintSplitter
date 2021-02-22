@@ -5,7 +5,9 @@ import cli_handler as cli
 
 
 def main():
-    print ('Starting splitter')
+    print('Starting splitter')
+
+    cli.check_settings()
 
     print("Logging in...")
     try: 
