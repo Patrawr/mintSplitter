@@ -29,7 +29,7 @@ def main():
 
     selected_accounts = cli.get_selected_accounts(accounts)
 
-    splitter.split_transactions (selected_accounts, start_date='12/05/20')
+    splitter.split_transactions (selected_accounts, start_date=cli.get_start_date())
 
     mint.close()
 

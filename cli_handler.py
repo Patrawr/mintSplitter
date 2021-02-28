@@ -1,8 +1,15 @@
 from PyInquirer import prompt, print_json
 import json
+import datetime
 
 SETTINGS_TEMPLATE = {'selectedAccounts': []}
 SETTINGS_PATH = "settings.json"
+DEFAULT_START_DATE = 60
+
+def get_start_date(past_days=DEFAULT_START_DATE):
+    start_date = (datetime.datetime.today() - datetime.timedelta(days=past_days)).strftime('%m/%d/%y')
+    print (f"Retrieving transactions since {start_date}\n")
+    return start_date
 
 def open_settings_file():
     # 1 check if file exists, if so open
@@ -86,6 +93,7 @@ def get_selected_accounts(accounts):
                 'type': 'confirm',
                 'message': confirm_settings_prompt,
                 'name': 'answer',
+                'qmark':'',
                 'default': True
             }
         ]
