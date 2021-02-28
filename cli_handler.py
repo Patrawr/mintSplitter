@@ -2,13 +2,14 @@ from PyInquirer import prompt, print_json
 import json
 
 SETTINGS_TEMPLATE = {'selectedAccounts': []}
+SETTINGS_PATH = "settings.json"
 
 def open_settings_file():
     # 1 check if file exists, if so open
     # 2 check if is empty or not, if not write template out
     settings = {}
 
-    with open("settings.json", "a+") as settings_file:
+    with open(SETTINGS_PATH, "a+") as settings_file:
         try:
             settings_file.seek(0)
             settings = json.load(settings_file)
@@ -23,44 +24,70 @@ def open_settings_file():
 
     return settings
 
-def check_settings():
+def save_settings(settings_obj):
+    with open(SETTINGS_PATH, "w") as settings_file:
+        try:
+            json.dump(settings_obj, settings_file)
+        except IOError:
+            print("Issues saving your configuration")
 
-    settings = open_settings_file()
 
-    print(settings)
-    print()
-
+# extract account number with last four digits unmasked
 def filter_answers(answer): 
     split_answers = answer.split('|')
     return split_answers[1].strip()
 
-# presents retrieved mint accounts to user in CLI and returns list of mint account objects corresponding to selection
-def get_accounts_from_user_selection(accounts):
-    check_settings()
 
-    filteredAccountChoices = []
+def get_account_selection_from_cli(accounts):
+    accountChoices = []
 
     # generates account selection question
     for filteredAccount in accounts:
-        filteredAccountChoices.append({'name': f"{filteredAccount['fiName']}  {filteredAccount['accountName']} | {filteredAccount['yodleeAccountNumberLast4']} | ${filteredAccount['currentBalance']}"})
+        accountChoices.append({'name': f"{filteredAccount['fiName']}  {filteredAccount['accountName']} | {filteredAccount['yodleeAccountNumberLast4']} | ${filteredAccount['currentBalance']}"})
 
 
-    filtered_account_questions = [
+    account_questions = [
         {
             'type': 'checkbox',
-            'name': 'accounts',
+            'name': 'selectedAccounts',
             'message': "Select accounts to split.",
             'qmark': '💸',
-            'choices': filteredAccountChoices
+            'choices': accountChoices
         }
     ]
 
-    # prompts the user to select from retrieved accounts
-    selected_accounts = prompt(filtered_account_questions)
+    # prompts the user to select from retrieved accounts and saves them
+    selected_accounts = prompt(account_questions)
+    
+    print("Saving your selections...")
+    save_settings(selected_accounts)
+
+    return selected_accounts
+
+
+
+# handles retrieving either saved accounts from file or accounts selected by user from CLI
+def get_selected_accounts(accounts):
+    selected_accounts = {}
     selected_accounts_obj = []
 
+    settings = open_settings_file()
+    
+    # if accounts are found previously saved in the settings file, load those
+    # if not, prompt the user to select new accounts
+    if settings["selectedAccounts"]:
+        print(f"Would you still like to use these settings?\n\n")
+        print("Currently Selected Accounts To Split")
+        print("--------------------------------------")
+        for account in settings["selectedAccounts"]:
+            print(account)
+
+        selected_accounts = settings
+    else:
+        selected_accounts = get_account_selection_from_cli(accounts)
+
     # get the mint accounts object for each selected account
-    for answer in selected_accounts["accounts"]:
+    for answer in selected_accounts["selectedAccounts"]:
         for account in accounts:
             if account['yodleeAccountNumberLast4'] == filter_answers(answer):
                 selected_accounts_obj.append(account)

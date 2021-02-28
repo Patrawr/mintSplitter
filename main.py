@@ -7,8 +7,6 @@ import cli_handler as cli
 def main():
     print('Starting splitter')
 
-    cli.check_settings()
-
     print("Logging in...")
     try: 
         mint = mintapi.Mint(
@@ -29,7 +27,7 @@ def main():
     splitter = mint_splitter.Splitter(mint)
     accounts = splitter.get_filtered_accounts()
 
-    selected_accounts = cli.get_accounts_from_user_selection(accounts)
+    selected_accounts = cli.get_selected_accounts(accounts)
 
     splitter.split_transactions (selected_accounts, start_date='12/05/20')
 
