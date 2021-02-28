@@ -67,6 +67,7 @@ def get_account_selection_from_cli(accounts):
 
 
 # handles retrieving either saved accounts from file or accounts selected by user from CLI
+# TODO: refactor to be a bit more separated
 def get_selected_accounts(accounts):
     selected_accounts = {}
     selected_accounts_obj = []
@@ -76,13 +77,23 @@ def get_selected_accounts(accounts):
     # if accounts are found previously saved in the settings file, load those
     # if not, prompt the user to select new accounts
     if settings["selectedAccounts"]:
-        print(f"Would you still like to use these settings?\n\n")
-        print("Currently Selected Accounts To Split")
-        print("--------------------------------------")
+        confirm_settings_prompt = "Would you still like to use these settings?\n\nCurrently Selected Accounts To Split\n--------------------------------------\n"
         for account in settings["selectedAccounts"]:
-            print(account)
+            confirm_settings_prompt = confirm_settings_prompt + f"{account}\n"                  
+        
+        question_confirm_settings = [
+            {
+                'type': 'confirm',
+                'message': confirm_settings_prompt,
+                'name': 'answer',
+                'default': True
+            }
+        ]
 
-        selected_accounts = settings
+        if prompt(question_confirm_settings)['answer']:
+            selected_accounts = settings
+        else:
+            selected_accounts = get_account_selection_from_cli(accounts)
     else:
         selected_accounts = get_account_selection_from_cli(accounts)
 
