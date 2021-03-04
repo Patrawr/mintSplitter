@@ -1,6 +1,7 @@
 from PyInquirer import prompt, print_json
 import json
 import datetime
+import keyring
 
 SETTINGS_TEMPLATE = {'selectedAccounts': []}
 SETTINGS_PATH = "settings.json"
@@ -112,3 +113,31 @@ def get_selected_accounts(accounts):
                 selected_accounts_obj.append(account)
 
     return selected_accounts_obj
+
+
+# get user mint credentials from command line and saves to keyring
+def save_credentials(keyring_service):
+    print("No existing mint account found.")
+    print("NOTE: These credentials are stored only in your operating system's credential vault and never in a file.")
+
+    questions = [
+        {
+            'type': 'input',
+            'name': 'username',
+            'message': 'Enter your mint username:'
+        },
+        {
+            'type': 'password',
+            'name': 'password',
+            'message': 'Enter your mint password:'
+        }
+    ]
+
+    credentials = prompt(questions)
+    username = credentials['username']
+    password = credentials['password']
+
+    keyring.set_password(keyring_service, 'user', username)
+    keyring.set_password(keyring_service, 'password', password)
+
+    return username, password

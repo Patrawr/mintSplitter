@@ -78,9 +78,9 @@ class Splitter:
             #navigate to transaction page for specific account
             try: 
                 self.mint.driver.get(f"https://mint.intuit.com/transaction.event?accountId={account['id']}")
-                print(f"Navigating to account {account['accountName']}")
+                print(f"Navigating to account {account['accountName']}\n")
             except:
-                print(f"Cannot find transactions for {account['accountName']}")
+                print(f"Cannot find transactions for {account['accountName']}\n")
 
 
             # isChild field determines if it's joint or not, date is mm/dd/yy format
@@ -94,5 +94,5 @@ class Splitter:
                     joint_txns.append(txn)
                     self.submit_split_form(txn)
 
-            print(f"Split {len(joint_txns)} txns for {account['accountName']}")
+            print(f"\nSplit {len(joint_txns)} txns for {account['accountName']}\n")
 

@@ -3,15 +3,25 @@ import mintapi
 import keyring
 import cli_handler as cli
 
+KEYRING_SERVICE = 'mint_splitter'
 
 def main():
     print('Starting splitter')
 
+    user = keyring.get_password(KEYRING_SERVICE, "user")
+    password = ''
+
+    # if credentials already saved in keyring...
+    if user:
+        password = keyring.get_password(KEYRING_SERVICE, "password")
+    else:
+        user, password = cli.save_credentials(KEYRING_SERVICE)
+
     print("Logging in...")
     try: 
         mint = mintapi.Mint(
-            email=keyring.get_password("mint_splitter", "user"),
-            password=keyring.get_password("mint_splitter", "password"),
+            email=user,
+            password=password,
             mfa_method='sms',
             headless=True,
             session_path="./session",
