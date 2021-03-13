@@ -2,6 +2,7 @@ import splitter as mint_splitter
 import mintapi
 import keyring
 import cli_handler as cli
+import sys
 
 KEYRING_SERVICE = 'mint_splitter'
 
@@ -42,6 +43,8 @@ def main():
     splitter.split_transactions (selected_accounts, start_date=cli.get_start_date())
 
     mint.close()
+
+    sys.exit()
 
 if __name__ == '__main__':
         main()

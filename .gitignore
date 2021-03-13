@@ -15,3 +15,4 @@ txns.json
 __pycache__/splitter.cpython-39.pyc
 __pycache__/cli_handler.cpython-39.pyc
 settings.json
+.vscode/extensions.json

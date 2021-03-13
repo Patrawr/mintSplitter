@@ -51,7 +51,7 @@ def get_account_selection_from_cli(accounts):
 
     # generates account selection question
     for filteredAccount in accounts:
-        accountChoices.append({'name': f"{filteredAccount['fiName']}  {filteredAccount['accountName']} | {filteredAccount['yodleeAccountNumberLast4']} | ${filteredAccount['currentBalance']}"})
+        accountChoices.append({'name': f"{filteredAccount['fiName']} | {filteredAccount['accountName']} | {filteredAccount['yodleeAccountNumberLast4']} | ${filteredAccount['currentBalance']}"})
 
 
     account_questions = [
@@ -66,11 +66,27 @@ def get_account_selection_from_cli(accounts):
 
     # prompts the user to select from retrieved accounts and saves them
     selected_accounts = prompt(account_questions)
+
+
+    selected_accounts_json = {
+        "selectedAccounts" : []
+    }
+
+    # translating single line display string to json object
+    for account in selected_accounts['selectedAccounts']:
+        split_answer = account.split('|')
+        selected_accounts_json["selectedAccounts"].append({
+            "fiName": split_answer[0].strip(),
+            "accountName": split_answer[1].strip(),
+            "yodleeAccountNumberLast4": split_answer[2].strip(),
+            "currentBalance": split_answer[3].strip()
+        })
+
     
     print("Saving your selections...")
-    save_settings(selected_accounts)
+    save_settings(selected_accounts_json)
 
-    return selected_accounts
+    return selected_accounts_json
 
 
 
@@ -87,7 +103,9 @@ def get_selected_accounts(accounts):
     if settings["selectedAccounts"]:
         confirm_settings_prompt = "Would you still like to use these settings?\n\nCurrently Selected Accounts To Split\n--------------------------------------\n"
         for account in settings["selectedAccounts"]:
-            confirm_settings_prompt = confirm_settings_prompt + f"{account}\n"                  
+            # convert accounts dictionary
+            confirm_settings_prompt = confirm_settings_prompt + \
+            f"{account['fiName']} | {account['accountName']} | {account['yodleeAccountNumberLast4']} | {account['currentBalance']} \n"                  
         
         question_confirm_settings = [
             {
@@ -109,9 +127,12 @@ def get_selected_accounts(accounts):
     # get the mint accounts object for each selected account
     for answer in selected_accounts["selectedAccounts"]:
         for account in accounts:
-            if account['yodleeAccountNumberLast4'] == filter_answers(answer):
+            if account['yodleeAccountNumberLast4'] == answer['yodleeAccountNumberLast4']:
                 selected_accounts_obj.append(account)
+                # update the balance in the settings file
+                answer['currentBalance'] = account['currentBalance']
 
+    save_settings(selected_accounts)
     return selected_accounts_obj
 
 
