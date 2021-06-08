@@ -6,6 +6,7 @@ import sys
 
 KEYRING_SERVICE = 'mint_splitter'
 
+
 def main():
     print('Starting splitter')
 
@@ -19,7 +20,7 @@ def main():
         user, password = cli.save_credentials(KEYRING_SERVICE)
 
     print("Logging in...")
-    try: 
+    try:
         mint = mintapi.Mint(
             email=user,
             password=password,
@@ -30,7 +31,6 @@ def main():
         )
     except:
         print("Failed to login to mint/open new chrome session. Ensure your current chrome session is closed")
-        mint.close()
         exit()
 
     print("Logged in!")
@@ -40,11 +40,13 @@ def main():
 
     selected_accounts = cli.get_selected_accounts(accounts)
 
-    splitter.split_transactions (selected_accounts, start_date=cli.get_start_date())
+    splitter.split_transactions(
+        selected_accounts, start_date=cli.get_start_date())
 
     mint.close()
 
     sys.exit()
 
+
 if __name__ == '__main__':
-        main()
+    main()

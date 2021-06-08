@@ -7,10 +7,13 @@ SETTINGS_TEMPLATE = {'selectedAccounts': []}
 SETTINGS_PATH = "settings.json"
 DEFAULT_START_DATE = 60
 
+
 def get_start_date(past_days=DEFAULT_START_DATE):
-    start_date = (datetime.datetime.today() - datetime.timedelta(days=past_days)).strftime('%m/%d/%y')
-    print (f"Retrieving transactions since {start_date}\n")
+    start_date = (datetime.datetime.today() -
+                  datetime.timedelta(days=past_days)).strftime('%m/%d/%y')
+    print(f"Retrieving transactions since {start_date}\n")
     return start_date
+
 
 def open_settings_file():
     # 1 check if file exists, if so open
@@ -32,16 +35,17 @@ def open_settings_file():
 
     return settings
 
+
 def save_settings(settings_obj):
     with open(SETTINGS_PATH, "w") as settings_file:
         try:
             json.dump(settings_obj, settings_file)
         except IOError:
-            print("Issues saving your configuration")
+            print(f"Issues saving your configuration at {settings_file}")
 
 
 # extract account number with last four digits unmasked
-def filter_answers(answer): 
+def filter_answers(answer):
     split_answers = answer.split('|')
     return split_answers[1].strip()
 
@@ -51,8 +55,8 @@ def get_account_selection_from_cli(accounts):
 
     # generates account selection question
     for filteredAccount in accounts:
-        accountChoices.append({'name': f"{filteredAccount['fiName']} | {filteredAccount['accountName']} | {filteredAccount['yodleeAccountNumberLast4']} | ${filteredAccount['currentBalance']}"})
-
+        accountChoices.append(
+            {'name': f"{filteredAccount['fiName']} | {filteredAccount['accountName']} | {filteredAccount['yodleeAccountNumberLast4']} | ${filteredAccount['currentBalance']}"})
 
     account_questions = [
         {
@@ -67,9 +71,8 @@ def get_account_selection_from_cli(accounts):
     # prompts the user to select from retrieved accounts and saves them
     selected_accounts = prompt(account_questions)
 
-
     selected_accounts_json = {
-        "selectedAccounts" : []
+        "selectedAccounts": []
     }
 
     # translating single line display string to json object
@@ -82,12 +85,10 @@ def get_account_selection_from_cli(accounts):
             "currentBalance": split_answer[3].strip()
         })
 
-    
     print("Saving your selections...")
     save_settings(selected_accounts_json)
 
     return selected_accounts_json
-
 
 
 # handles retrieving either saved accounts from file or accounts selected by user from CLI
@@ -97,7 +98,7 @@ def get_selected_accounts(accounts):
     selected_accounts_obj = []
 
     settings = open_settings_file()
-    
+
     # if accounts are found previously saved in the settings file, load those
     # if not, prompt the user to select new accounts
     if settings["selectedAccounts"]:
@@ -105,14 +106,14 @@ def get_selected_accounts(accounts):
         for account in settings["selectedAccounts"]:
             # convert accounts dictionary
             confirm_settings_prompt = confirm_settings_prompt + \
-            f"{account['fiName']} | {account['accountName']} | {account['yodleeAccountNumberLast4']} | {account['currentBalance']} \n"                  
-        
+                f"{account['fiName']} | {account['accountName']} | {account['yodleeAccountNumberLast4']} | {account['currentBalance']} \n"
+
         question_confirm_settings = [
             {
                 'type': 'confirm',
                 'message': confirm_settings_prompt,
                 'name': 'answer',
-                'qmark':'',
+                'qmark': '',
                 'default': True
             }
         ]

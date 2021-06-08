@@ -2,9 +2,10 @@ import time
 
 from datetime import date, datetime
 
-class Splitter: 
+
+class Splitter:
     """Class that has the ability to split mint transactions in two
-       
+
        For all accounts passed into the split_transactions method
        eligible transactions will be split into two transactions, 
        changing one of their categories to "Hide from Budgets and Trends". 
@@ -30,14 +31,14 @@ class Splitter:
         splits.append(round(stripped_amount - splits[0], 2))
         return splits
 
-
+    # builds and submits a split txn request
     def submit_split_form(self, txn):
         url = f"{self.MINT_URL}{self.UPDATE_TXN_PATH}"
 
         split_amounts = self.calculate_split(txn['amount'])
 
         data = {'task': 'split',
-                'data': '', 
+                'data': '',
                 'txnId': f"{txn['id']}:0",
                 'token': self.mint.token,
                 'amount0': split_amounts[0],
@@ -59,40 +60,41 @@ class Splitter:
 
         print(f"Split {txn['merchant']} for {txn['amount']} on {txn['date']}")
 
+    # given a list of accounts, filters them down to only active credit or bank accounts
     def get_filtered_accounts(self):
         accounts = self.mint.get_accounts(True)
         print("Retrieved accounts")
 
-        # filters out inactive accounts, and unrelated accounts
         accounts[:] = [
             account for account in accounts
             if account['isActive'] == True and account['accountType'] in ('credit', 'bank')
-                ]
+        ]
 
         return accounts
-
 
     def split_transactions(self, selected_accounts, start_date):
         for account in selected_accounts:
 
-            #navigate to transaction page for specific account
-            try: 
-                self.mint.driver.get(f"https://mint.intuit.com/transaction.event?accountId={account['id']}")
+            # navigate to transaction page for specific account
+            try:
+                self.mint.driver.get(
+                    f"https://mint.intuit.com/transaction.event?accountId={account['id']}")
                 print(f"Navigating to account {account['accountName']}\n")
             except:
-                print(f"Cannot find transactions for {account['accountName']}\n")
-
+                print(
+                    f"Cannot find transactions for {account['accountName']}\n")
 
             # isChild field determines if it's joint or not, date is mm/dd/yy format
-            txns = self.mint.get_transactions_json(id=account["id"], start_date=start_date)
+            txns = self.mint.get_transactions_json(
+                id=account["id"], start_date=start_date)
 
-            joint_txns=[]
+            joint_txns = []
 
             for txn in txns:
-                if  not txn["isChild"] and txn["category"] not in ("Hide from Budgets & Trends", "Transfer") and \
-                txn["isDebit"] and not txn["isPending"]:
+                if not txn["isChild"] and txn["category"] not in ("Hide from Budgets & Trends", "Transfer") and \
+                        txn["isDebit"] and not txn["isPending"]:
                     joint_txns.append(txn)
                     self.submit_split_form(txn)
 
-            print(f"\nSplit {len(joint_txns)} txns for {account['accountName']}\n")
-
+            print(
+                f"\nSplit {len(joint_txns)} txns for {account['accountName']}\n")
