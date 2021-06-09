@@ -3,6 +3,7 @@ import mintapi
 import keyring
 import cli_handler as cli
 import sys
+import os.path as path
 
 KEYRING_SERVICE = 'mint_splitter'
 
@@ -26,7 +27,7 @@ def main():
             password=password,
             mfa_method='sms',
             headless=True,
-            session_path="./session",
+            session_path=path.abspath("./session"),
             wait_for_sync=False
         )
     except:

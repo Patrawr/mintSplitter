@@ -2,9 +2,10 @@ from PyInquirer import prompt, print_json
 import json
 import datetime
 import keyring
+import os.path as path
 
 SETTINGS_TEMPLATE = {'selectedAccounts': []}
-SETTINGS_PATH = "settings.json"
+SETTINGS_PATH = path.abspath("./settings.json")
 DEFAULT_START_DATE = 60
 
 

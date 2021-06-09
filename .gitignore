@@ -17,3 +17,5 @@ __pycache__/cli_handler.cpython-39.pyc
 settings.json
 .vscode/extensions.json
 src/__pycache__
+src/main.py
+chromedriver.exe
