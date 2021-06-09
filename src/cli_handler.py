@@ -10,6 +10,9 @@ DEFAULT_START_DATE = 60
 
 
 def get_start_date(past_days=DEFAULT_START_DATE):
+    """
+    Determines gregorian date to grab transactions from. Default is 60.
+    """
     start_date = (datetime.datetime.today() -
                   datetime.timedelta(days=past_days)).strftime('%m/%d/%y')
     print(f"Retrieving transactions since {start_date}\n")
@@ -17,8 +20,13 @@ def get_start_date(past_days=DEFAULT_START_DATE):
 
 
 def open_settings_file():
-    # 1 check if file exists, if so open
-    # 2 check if is empty or not, if not write template out
+    """
+    Handles the settings file I/O and setup
+
+    Check if file exists, if so open. 
+    Check if is empty or not, if not write json template out
+    """
+    
     settings = {}
 
     with open(SETTINGS_PATH, "a+") as settings_file:
@@ -45,8 +53,11 @@ def save_settings(settings_obj):
             print(f"Issues saving your configuration at {settings_file}")
 
 
-# extract account number with last four digits unmasked
+
 def filter_answers(answer):
+    """
+    Extract account number from prompt with last four digits unmasked
+    """
     split_answers = answer.split('|')
     return split_answers[1].strip()
 
@@ -92,9 +103,11 @@ def get_account_selection_from_cli(accounts):
     return selected_accounts_json
 
 
-# handles retrieving either saved accounts from file or accounts selected by user from CLI
 # TODO: refactor to be a bit more separated
 def get_selected_accounts(accounts):
+    """
+    Handles retrieving either saved accounts from file or accounts selected by user from CLI
+    """
     selected_accounts = {}
     selected_accounts_obj = []
 
@@ -138,8 +151,10 @@ def get_selected_accounts(accounts):
     return selected_accounts_obj
 
 
-# get user mint credentials from command line and saves to keyring
 def save_credentials(keyring_service):
+    """
+    Get user mint credentials from command line and saves to keyring
+    """
     print("No existing mint account found.")
     print("NOTE: These credentials are stored only in your operating system's credential vault and never in a file.")
 

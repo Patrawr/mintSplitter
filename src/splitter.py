@@ -11,7 +11,7 @@ class Splitter:
        changing one of their categories to "Hide from Budgets and Trends". 
 
        The percentage of the split is set to 50% by default but can be changed
-       on a per account basis.
+       on a per account basis (TODO)
     """
 
     MINT_URL = 'https://mint.intuit.com'
@@ -21,9 +21,12 @@ class Splitter:
     def __init__(self, mint):
         self.mint = mint
 
-    # takes in a monetary amount, strips off the $ and splits into two equal floats,
-    # with 2 decimal precision
+    
     def calculate_split(self, total_amount):
+        """
+         Takes in a monetary amount, strips off the $ and splits into two equal floats,
+         with 2 decimal precision
+        """
         splits = []
         stripped_amount = float(total_amount.replace('$', ''))
 
@@ -31,8 +34,11 @@ class Splitter:
         splits.append(round(stripped_amount - splits[0], 2))
         return splits
 
-    # builds and submits a split txn request
+    
     def submit_split_form(self, txn):
+        """
+         Builds and submits a split txn request
+        """
         url = f"{self.MINT_URL}{self.UPDATE_TXN_PATH}"
 
         split_amounts = self.calculate_split(txn['amount'])
@@ -60,8 +66,11 @@ class Splitter:
 
         print(f"Split {txn['merchant']} for {txn['amount']} on {txn['date']}")
 
-    # given a list of accounts, filters them down to only active credit or bank accounts
+     
     def get_filtered_accounts(self):
+        """
+        Given a list of accounts, filters them down to only active credit or bank accounts
+        """
         accounts = self.mint.get_accounts(True)
         print("Retrieved accounts")
 

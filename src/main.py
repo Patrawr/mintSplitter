@@ -45,7 +45,6 @@ def main():
         selected_accounts, start_date=cli.get_start_date())
 
     mint.close()
-
     sys.exit()
 
 
